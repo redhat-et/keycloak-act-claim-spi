@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: spiffe-demo
+spec:
+  template:
+    spec:
+      containers:
+        - name: keycloak
+          image: ghcr.io/pavelanni/keycloak-act-claim-spi:1.0.0-snapshot
+          imagePullPolicy: Always

@@ -1,0 +1,10 @@
+target/
+*.class
+*.jar
+*.log
+.idea/
+*.iml
+
+# Local credentials (use env.sh.example as template)
+scripts/env.sh
+.DS_Store

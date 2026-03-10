@@ -61,7 +61,8 @@ public class ActClaimTokenExchangeProvider implements TokenExchangeProvider {
             AccessToken actorToken = verifier.getToken();
 
             String actorSub = actorToken.getSubject();
-            LOG.debugv("Actor token sub: {0}", actorSub);
+            String actorClientId = actorToken.getIssuedFor(); // azp = SPIFFE ID
+            LOG.debugv("Actor token sub: {0}, client_id: {1}", actorSub, actorClientId);
 
             // Read the existing act chain from the SUBJECT token (the token
             // being exchanged), not the actor token. The subject token carries
@@ -86,7 +87,7 @@ public class ActClaimTokenExchangeProvider implements TokenExchangeProvider {
                 }
             }
 
-            Map<String, Object> actClaim = buildActClaim(actorSub, existingAct);
+            Map<String, Object> actClaim = buildActClaim(actorSub, actorClientId, existingAct);
 
             if (actClaim == null) {
                 LOG.warn("Act claim depth exceeds maximum, not adding act claim");
@@ -133,7 +134,8 @@ public class ActClaimTokenExchangeProvider implements TokenExchangeProvider {
         }
     }
 
-    static Map<String, Object> buildActClaim(String actorSub, Map<String, Object> existingAct) {
+    static Map<String, Object> buildActClaim(String actorSub, String actorClientId,
+                                              Map<String, Object> existingAct) {
         if (actorSub == null) {
             return null;
         }
@@ -144,6 +146,9 @@ public class ActClaimTokenExchangeProvider implements TokenExchangeProvider {
 
         Map<String, Object> actClaim = new HashMap<>();
         actClaim.put("sub", actorSub);
+        if (actorClientId != null) {
+            actClaim.put("client_id", actorClientId);
+        }
         if (existingAct != null) {
             actClaim.put("act", existingAct);
         }

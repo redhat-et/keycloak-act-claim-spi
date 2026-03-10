@@ -17,42 +17,49 @@ class ActClaimTokenExchangeProviderTest {
 
     @Test
     void testActClaimFirstHop() {
-        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim("orchestrator", null);
+        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim(
+                "orchestrator-sub", "spiffe://example.com/orchestrator", null);
 
         assertNotNull(result);
-        assertEquals("orchestrator", result.get("sub"));
+        assertEquals("orchestrator-sub", result.get("sub"));
+        assertEquals("spiffe://example.com/orchestrator", result.get("client_id"));
         assertNull(result.get("act"));
     }
 
     @Test
     void testActClaimChaining() {
         Map<String, Object> existingAct = new HashMap<>();
-        existingAct.put("sub", "orchestrator");
+        existingAct.put("sub", "orchestrator-sub");
+        existingAct.put("client_id", "spiffe://example.com/orchestrator");
 
-        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim("summarizer", existingAct);
+        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim(
+                "summarizer-sub", "spiffe://example.com/summarizer", existingAct);
 
         assertNotNull(result);
-        assertEquals("summarizer", result.get("sub"));
+        assertEquals("summarizer-sub", result.get("sub"));
+        assertEquals("spiffe://example.com/summarizer", result.get("client_id"));
 
         @SuppressWarnings("unchecked")
         Map<String, Object> nestedAct = (Map<String, Object>) result.get("act");
         assertNotNull(nestedAct);
-        assertEquals("orchestrator", nestedAct.get("sub"));
+        assertEquals("orchestrator-sub", nestedAct.get("sub"));
+        assertEquals("spiffe://example.com/orchestrator", nestedAct.get("client_id"));
     }
 
     @Test
     void testNoActorToken() {
-        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim(null, null);
+        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim(null, null, null);
         assertNull(result);
     }
 
     @Test
     void testActClaimSubIsActorSub() {
         String actorSub = "agent-alpha";
-        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim(actorSub, null);
+        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim(actorSub, null, null);
 
         assertNotNull(result);
         assertEquals(actorSub, result.get("sub"));
+        assertNull(result.get("client_id"));
     }
 
     @Test
@@ -69,7 +76,8 @@ class ActClaimTokenExchangeProviderTest {
         }
 
         // At depth 10, buildActClaim should return null (cap exceeded)
-        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim("agent-11", current);
+        Map<String, Object> result = ActClaimTokenExchangeProvider.buildActClaim(
+                "agent-11", "spiffe://example.com/agent-11", current);
         assertNull(result);
     }
 }
